@@ -97,7 +97,7 @@ Installing
 Add to {deps,[...]} in rebar.config, if using rebar:
 
 ```erlang
-{generic, "v0.0.0", {git,"git://github.com/amtal/generic.git",{tag,"v0.0.0"}}},
+{generic, ".*", {git,"git://github.com/amtal/generic.git",{tag,"v0.0.0"}}},
 {lfe_utils, ".*", {git,"git://github.com/amtal/lfe_utils.git",{tag,"v1.2.3"}}},
-{lfe, "0.6.2", {git,"git://github.com/rvirding/lfe",{tag,"v0.6.2"}}}
+{lfe, ".*", {git,"git://github.com/rvirding/lfe",{tag,"v0.6.2"}}}
 ```
