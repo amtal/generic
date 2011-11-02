@@ -1,7 +1,10 @@
 (include-lib "lfe_utils/include/all.lfe")
 (defmodule generic
   (using lists)
-  (export (children 1) (family 1)))
+  (export 
+    (children 1) (children 2)
+    (family 1) (family 2)
+  ))
 
 ;; Any tagged tuple works. Tag doesn't have to be atom.
 ;;
@@ -41,3 +44,21 @@
       (lists:map (fun family 1) <>)
       lists:append
       (cons term <>)))
+
+;; List comprehensions provide very elegant (and pretty efficient)
+;; filtering of generic data. If multiple matches are required, however,
+;; functions or funs are needed. Hence, these wrappers.
+
+(defn children [f term] 
+  (filter-matches f (children term)))
+
+(defn family [f term] 
+  (filter-matches f (family term)))
+
+(defn filter-matches [f xs]
+  (in (lists:foldr accum '() xs)
+    [accum 
+      (fn [x acc] 
+        (try (funcall f x) ; LFE try clause is a bit of a bear
+          [case (y (cons y acc))] ; wonder if I can improve it?
+          [catch ((tuple 'error 'function_clause c) acc)]))]))
