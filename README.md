@@ -1,40 +1,43 @@
 Tools for trivially transforming tricky Erlang terms.
 
-Scope
-=====
-
-This library solves two problems in Erlang:
-
-* Boilerplate pattern matching purely for the purpose of traversal.
-* Writing new tree traversal utility functions every time that gets old.
-
-These problems show up in anything that builds an Abstract Syntax tree out of
-Erlang terms, such as:
-
-* Compilers and interpreters.
-* Large, complex configurations.
-* Complex process states.
-
-The library isn't meant for mucking with the following:
-
-* Opaque data types. I shouldn't have to explain why. Don't do it.
-* Things that aren't tagged tuples or lists. Wrap them in atom-tagged tuples!
-
-Inspiration
-===========
-
-Generic programming is about writing code that doesn't really care what
-underlying data structure are used. It reduces coupling on internal data,
-increasing flexibility and robustness to change.
-
-The following Haskell libraries were inspiring:
-
-* 'SYB' (Scrap Your Boilerplate )
-* 'Uniplate'
-* 'Traversal.hs' by Sebastian Fischer
-
 Examples
 ========
+
+Extract data from complex structures, using partial pattern matches:
+
+```erlang
+(riak@127.0.0.1)26> Procs = [process_info(P)||P<-processes()].   
+...
+(riak@127.0.0.1)27> lists:sum([N||{heap_size,N}<-generic:family(Procs)]).
+1355986
+(riak@127.0.0.1)28> lists:sum(generic:family(fun
+    ({heap_size,N})->N;
+    ({stack_size,N})->N 
+end, Procs)).
+1360124
+```
+
+Operations on real-world AST:
+
+```erlang
+46> S = "fun(A,B)->X=A+B, Y=f(X)*A, X div Y end.",
+{ok,Ts,_} = erl_scan:string(String),
+{ok,AST} = erl_parse:parse_exprs(Ts).
+...
+% find all definitions and uses of variable names
+47> [Name||{var,_,Name}<-generic:family(AST)].                         
+['A','B','X','A','B','Y','X','A','X','Y']
+% find which variable names got used directly by which operations
+57> Ap = generic:family(fun
+    ({call,_,F,_}=X)->{F,X}; 
+    ({op,_,Op,_,_}=X)->{Op,X} 
+end, AST),
+[{Op,[Name||{var,_,Name}<-generic:family(A)]}||{Op,A}<-Apps].  
+[{'+',['A','B']},
+ {'*',['X','A']},
+ {{atom,1,f},['X']},
+ {'div',['X','Y']}]
+```
 
 Extracting errors from trace.
 
@@ -44,6 +47,17 @@ Optimizations on AST.
 
 Editing large configurations.
 
+
+Using
+=====
+
+Add to {deps,[...]} in your project's rebar.config:
+
+```erlang
+{generic, ".*", {git,"git://github.com/amtal/generic.git",{tag,"v0.0.0"}}},
+{lfe_utils, ".*", {git,"git://github.com/amtal/lfe_utils.git",{tag,"v1.2.3"}}},
+{lfe, ".*", {git,"git://github.com/rvirding/lfe",{tag,"v0.6.2"}}}
+```
 
 API
 ===
@@ -91,13 +105,35 @@ Paramorphisms. Folds are needed.
 Contexts/holes, like transform but passing the parent node as well? 
 
 
-Installing
-==========
+Scope
+=====
 
-Add to {deps,[...]} in rebar.config, if using rebar:
+This library solves two problems in Erlang:
 
-```erlang
-{generic, ".*", {git,"git://github.com/amtal/generic.git",{tag,"v0.0.0"}}},
-{lfe_utils, ".*", {git,"git://github.com/amtal/lfe_utils.git",{tag,"v1.2.3"}}},
-{lfe, ".*", {git,"git://github.com/rvirding/lfe",{tag,"v0.6.2"}}}
-```
+* Boilerplate pattern matching purely for the purpose of traversal.
+* Writing new tree traversal utility functions every time that gets old.
+
+These problems show up in anything that builds an Abstract Syntax tree out of
+Erlang terms, such as:
+
+* Compilers and interpreters.
+* Large, complex configurations.
+* Complex process states.
+
+The library isn't meant for mucking with the following:
+
+* Opaque data types. I shouldn't have to explain why. Don't do it.
+* Things that aren't tagged tuples or lists. Wrap them in atom-tagged tuples!
+
+Inspiration
+===========
+
+Generic programming is about writing code that doesn't really care what
+underlying data structure are used. It reduces coupling on internal data,
+increasing flexibility and robustness to change.
+
+The following Haskell libraries were inspiring:
+
+* 'SYB' (Scrap Your Boilerplate )
+* 'Uniplate'
+* 'Traversal.hs' by Sebastian Fischer
