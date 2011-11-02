@@ -1,0 +1,12 @@
+{application, generic,
+ [
+  {description, "Generic data operations."},
+  {vsn, "v0.0.0"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mods, [generic]},
+  {env, []}
+ ]}.
