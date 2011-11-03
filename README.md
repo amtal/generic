@@ -3,21 +3,7 @@ Tools for trivially transforming tricky Erlang terms.
 Examples
 ========
 
-Extract data from complex structures, using partial pattern matches:
-
-```erlang
-(riak@127.0.0.1)26> Procs = [process_info(P)||P<-processes()].   
-...
-(riak@127.0.0.1)27> lists:sum([N||{heap_size,N}<-generic:family(Procs)]).
-1355986
-(riak@127.0.0.1)28> lists:sum(generic:family(fun
-    ({heap_size,N})->N;
-    ({stack_size,N})->N 
-end, Procs)).
-1360124
-```
-
-Operations on real-world AST:
+Extract data from deep within complex structures, using partial pattern matches:
 
 ```erlang
 46> S = "fun(A,B)->X=A+B, Y=f(X)*A, X div Y end.",
@@ -27,12 +13,12 @@ Operations on real-world AST:
 % find all definitions and uses of variable names
 47> [Name||{var,_,Name}<-generic:family(AST)].                         
 ['A','B','X','A','B','Y','X','A','X','Y']
-% find which variable names got used directly by which operations
-57> Ap = generic:family(fun
+% find which variable names got used by which operations
+48> Ap = generic:family(fun
     ({call,_,F,_}=X)->{F,X}; 
     ({op,_,Op,_,_}=X)->{Op,X} 
 end, AST),
-[{Op,[Name||{var,_,Name}<-generic:family(A)]}||{Op,A}<-Apps].  
+[{Op,[Name||{var,_,Name}<-generic:family(A)]}||{Op,A}<-Ap].  
 [{'+',['A','B']},
  {'*',['X','A']},
  {{atom,1,f},['X']},
